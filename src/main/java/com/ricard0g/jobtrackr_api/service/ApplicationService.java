@@ -179,7 +179,7 @@ public class ApplicationService {
             final Long userId,
             final Long applicationId,
             final ApplicationStatusPatchRequestDto dto) {
-        final Application application = requireApplicationForUser(userId, applicationId);
+        final Application application = requireApplicationForUserWithLock(userId, applicationId);
         final ApplicationStatus oldStatus = application.getApplicationStatus();
         final ApplicationStatus newStatus = dto.applicationStatus();
         if (!oldStatus.equals(newStatus)) {
@@ -239,6 +239,12 @@ public class ApplicationService {
     private Application requireApplicationForUser(final Long userId, final Long applicationId) {
         return applicationRepository
                 .findForUser(applicationId, userId)
+                .orElseThrow(() -> new ApplicationNotFoundException(userId, applicationId));
+    }
+
+    private Application requireApplicationForUserWithLock(final Long userId, final Long applicationId) {
+        return applicationRepository
+                .findForUserWithLock(applicationId, userId)
                 .orElseThrow(() -> new ApplicationNotFoundException(userId, applicationId));
     }
 

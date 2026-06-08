@@ -57,7 +57,7 @@ class ApplicationServiceTest {
     void patchApplicationStatus_whenStatusChanges_recordsHistory() {
         // given
         final Application application = sampleApplication(ApplicationStatus.APPLIED);
-        when(applicationRepository.findForUser(APPLICATION_ID, USER_ID)).thenReturn(Optional.of(application));
+        when(applicationRepository.findForUserWithLock(APPLICATION_ID, USER_ID)).thenReturn(Optional.of(application));
         when(applicationRepository.save(application)).thenReturn(application);
         final ApplicationStatusPatchRequestDto dto = new ApplicationStatusPatchRequestDto(ApplicationStatus.IN_REVIEW);
 
@@ -65,6 +65,7 @@ class ApplicationServiceTest {
         applicationService.patchApplicationStatus(USER_ID, APPLICATION_ID, dto);
 
         // then
+        verify(applicationRepository).findForUserWithLock(APPLICATION_ID, USER_ID);
         verify(statusHistoryService)
                 .recordStatusChange(application, ApplicationStatus.APPLIED, ApplicationStatus.IN_REVIEW);
         verify(applicationRepository).save(application);
@@ -74,7 +75,7 @@ class ApplicationServiceTest {
     void patchApplicationStatus_whenStatusUnchanged_doesNotRecordHistory() {
         // given
         final Application application = sampleApplication(ApplicationStatus.APPLIED);
-        when(applicationRepository.findForUser(APPLICATION_ID, USER_ID)).thenReturn(Optional.of(application));
+        when(applicationRepository.findForUserWithLock(APPLICATION_ID, USER_ID)).thenReturn(Optional.of(application));
         when(applicationRepository.save(application)).thenReturn(application);
         final ApplicationStatusPatchRequestDto dto = new ApplicationStatusPatchRequestDto(ApplicationStatus.APPLIED);
 
@@ -82,6 +83,7 @@ class ApplicationServiceTest {
         applicationService.patchApplicationStatus(USER_ID, APPLICATION_ID, dto);
 
         // then
+        verify(applicationRepository).findForUserWithLock(APPLICATION_ID, USER_ID);
         verify(statusHistoryService, never()).recordStatusChange(any(), any(), any());
         verify(applicationRepository).save(application);
     }
